@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PON Portal Auth</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body class="bg-light">
+    <div class="container py-5">
+      <h1 class="mb-4">Flask Auth Demo</h1>
+      <div class="row g-4">
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Регистрация</h5>
+              <form id="register-form" class="vstack gap-2">
+                <input class="form-control" type="text" name="username" placeholder="Username" required />
+                <input class="form-control" type="password" name="password" placeholder="Password" required />
+                <select class="form-select" name="role">
+                  <option value="user" selected>User</option>
+                  <option value="admin">Admin</option>
+                </select>
+                <button class="btn btn-primary" type="submit">Создать</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Логин</h5>
+              <form id="login-form" class="vstack gap-2">
+                <input class="form-control" type="text" name="username" placeholder="Username" required />
+                <input class="form-control" type="password" name="password" placeholder="Password" required />
+                <button class="btn btn-success" type="submit">Войти</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4 mt-4">
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <div class="card-body">
+              <h5 class="card-title">Профиль</h5>
+              <button id="profile-btn" class="btn btn-outline-primary">Получить профиль</button>
+              <button id="admin-btn" class="btn btn-outline-danger ms-2">Проверить admin</button>
+              <button id="logout-btn" class="btn btn-outline-secondary ms-2">Выход</button>
+              <pre class="mt-3" id="output">{}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function apiCall(url, payload) {
+        const response = await fetch(url, {
+          method: payload ? "POST" : "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: payload ? JSON.stringify(payload) : undefined,
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Request failed");
+        }
+        return data;
+      }
+
+      function bindForm(formId, endpoint) {
+        const form = document.getElementById(formId);
+        form.addEventListener("submit", async (event) => {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const payload = Object.fromEntries(formData.entries());
+          try {
+            const result = await apiCall(endpoint, payload);
+            document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+          } catch (error) {
+            document.getElementById("output").textContent = error.message;
+          }
+        });
+      }
+
+      document.getElementById("profile-btn").addEventListener("click", async () => {
+        try {
+          const result = await apiCall("/api/profile");
+          document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+        } catch (error) {
+          document.getElementById("output").textContent = error.message;
+        }
+      });
+
+      document.getElementById("admin-btn").addEventListener("click", async () => {
+        try {
+          const result = await apiCall("/api/admin");
+          document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+        } catch (error) {
+          document.getElementById("output").textContent = error.message;
+        }
+      });
+
+      document.getElementById("logout-btn").addEventListener("click", async () => {
+        try {
+          const result = await apiCall("/api/logout", {});
+          document.getElementById("output").textContent = JSON.stringify(result, null, 2);
+        } catch (error) {
+          document.getElementById("output").textContent = error.message;
+        }
+      });
+
+      bindForm("register-form", "/api/register");
+      bindForm("login-form", "/api/login");
+    </script>
+  </body>
+</html>

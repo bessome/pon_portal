@@ -23,6 +23,7 @@ def create_app() -> Flask:
     login_manager.init_app(app)
 
     from .models import User  # noqa: WPS433 (import inside factory)
+    from .olt_polling import schedule_polling_jobs  # noqa: WPS433
 
     @login_manager.user_loader
     def load_user(user_id: str) -> User | None:
@@ -36,5 +37,7 @@ def create_app() -> Flask:
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(page_bp)
+
+    schedule_polling_jobs(app)
 
     return app
